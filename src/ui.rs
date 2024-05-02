@@ -59,77 +59,49 @@ impl GamePad for MacroquadGamePad {
 pub struct MacroquadUI;
 
 impl MacroquadUI {
-    const GRID_WIDTH: i16 = 10; // TODO: Also defined in `Tetris`
-    const GRID_HEIGHT: i16 = 20; // TODO: Also defined in `Tetris`
-
-    // TODO: Use a `GameConf`
     const BRICK_SIZE: f32 = 40.0;
-    const BRICK_ZERO_X: f32 = Self::BRICK_SIZE;
-    const BRICK_ZERO_Y: f32 = Self::BRICK_SIZE;
-
-    const SHADOW_THICKNESS: f32 = 3.0;
-
+    const BRICK_SHADOW: f32 = 3.0;
     const FONT_SIZE: f32 = 32.0;
 
     pub fn new() -> Self {
         Self
     }
 
+    pub fn clear_background(&self) {
+        clear_background(BLACK);
+    }
+
     fn to_screen_x(&self, x: i16) -> f32 {
-        Self::BRICK_ZERO_X + f32::from(x) * Self::BRICK_SIZE
+        f32::from(x) * Self::BRICK_SIZE
     }
 
     fn to_screen_y(&self, y: i16) -> f32 {
-        Self::BRICK_ZERO_Y + f32::from(y) * Self::BRICK_SIZE
+        f32::from(y) * Self::BRICK_SIZE
     }
 
     fn to_screen_xy(&self, (x, y): (i16, i16)) -> (f32, f32) {
         (self.to_screen_x(x), self.to_screen_y(y))
     }
-
-    fn to_text_xy(&self, y: i16) -> (f32, f32) {
-        // Count 3 extra bricks: 2 the left and right wall and 1 for the text margin.
-        let x = self.to_screen_x(Self::GRID_WIDTH + 3);
-        let y = self.to_screen_y(y);
-        (x, y)
-    }
 }
 
 impl GameUI for MacroquadUI {
     fn draw_background(&mut self) {
-        let wall_color = TetrisColor::Gray;
-        for y in -1..=Self::GRID_HEIGHT {
-            self.draw_brick(&Position::new(-1, y), wall_color);
-            self.draw_brick(&Position::new(Self::GRID_WIDTH, y), wall_color);
-        }
-        for x in -1..=Self::GRID_WIDTH {
-            self.draw_brick(&Position::new(x, Self::GRID_HEIGHT), wall_color);
-        }
-    }
-    
-    fn draw_foreground(&mut self) {
     }
 
-    fn draw_grids(&mut self) {
-        let (screen_x_min, screen_y_min) = self.to_screen_xy((0, 0));
-        let (screen_x_max, screen_y_max) = self.to_screen_xy(
-            (Self::GRID_WIDTH, Self::GRID_HEIGHT)
-        );
-        for x in 0..(Self::GRID_WIDTH + 1) {
+    fn draw_debugging_grids(&mut self) {
+        let screen_x_max = screen_width();
+        let screen_y_max = screen_height();
+        let n_cols = (screen_x_max / Self::BRICK_SIZE).floor() as i16;
+        let n_rows = (screen_y_max / Self::BRICK_SIZE).floor() as i16;
+        // Draw vertical lines.
+        for x in 0..=n_cols {
             let screen_x = self.to_screen_x(x);
-            draw_line(
-                screen_x, screen_y_min,
-                screen_x, screen_y_max,
-                1.0, GRAY,
-            );
+            draw_line(screen_x, 0.0, screen_x, screen_y_max, 1.0, GRAY);
         }
-        for y in 0..(Self::GRID_HEIGHT + 1) {
+        // Draw horizontal lines.
+        for y in 0..=n_rows {
             let screen_y = self.to_screen_y(y);
-            draw_line(
-                screen_x_min, screen_y,
-                screen_x_max, screen_y,
-                1.0, GRAY,
-            );
+            draw_line(0.0, screen_y, screen_x_max, screen_y, 1.0, GRAY);
         }
     }
 
@@ -147,29 +119,29 @@ impl GameUI for MacroquadUI {
         // Draw shadows.
         draw_rectangle(
             screen_x, screen_y,
-            Self::BRICK_SIZE, Self::SHADOW_THICKNESS,
+            Self::BRICK_SIZE, Self::BRICK_SHADOW,
             darken(&color),
         );
         draw_rectangle(
             screen_x, screen_y,
-            Self::SHADOW_THICKNESS, Self::BRICK_SIZE,
+            Self::BRICK_SHADOW, Self::BRICK_SIZE,
             darken(&color),
         );
         draw_rectangle(
-            screen_x + Self::BRICK_SIZE - Self::SHADOW_THICKNESS, screen_y + Self::SHADOW_THICKNESS,
-            Self::SHADOW_THICKNESS, Self::BRICK_SIZE - Self::SHADOW_THICKNESS,
+            screen_x + Self::BRICK_SIZE - Self::BRICK_SHADOW, screen_y + Self::BRICK_SHADOW,
+            Self::BRICK_SHADOW, Self::BRICK_SIZE - Self::BRICK_SHADOW,
             lighten(&color),
         );
         draw_rectangle(
-            screen_x, screen_y + Self::BRICK_SIZE - Self::SHADOW_THICKNESS,
-            Self::BRICK_SIZE, Self::SHADOW_THICKNESS,
+            screen_x, screen_y + Self::BRICK_SIZE - Self::BRICK_SHADOW,
+            Self::BRICK_SIZE, Self::BRICK_SHADOW,
             lighten(&color),
         );
     }
 
-    fn draw_text(&mut self, row: i16, msg: &str) {
-        let (text_x, text_y) = self.to_text_xy(row);
-        draw_text(msg, text_x, text_y, Self::FONT_SIZE, WHITE);
+    fn draw_text(&mut self, pos: &Position, msg: &str) {
+        let (screen_x, screen_y) = self.to_screen_xy(pos.xy());
+        draw_text(msg, screen_x, screen_y, Self::FONT_SIZE, WHITE);
     }
 }
 

@@ -13,7 +13,7 @@ pub async fn play() {
     let mut pad = MacroquadGamePad::new();
     let mut tetris = Tetris::new();
 
-    clear_background(BLACK);
+    ui.clear_background();
     tetris.start_game();
 
     let interval = Duration::from_millis(25);

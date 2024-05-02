@@ -7,7 +7,7 @@ fn window_conf() -> Conf {
         window_title: String::from("Tetris"),
         fullscreen: false,
         window_width: 960,
-        window_height: 880,
+        window_height: 840,
         ..Default::default()
     }
 }

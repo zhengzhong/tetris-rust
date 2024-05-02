@@ -69,10 +69,9 @@ pub trait GamePad {
 /// Allow to draw onto the game UI.
 pub trait GameUI {
     fn draw_background(&mut self);
-    fn draw_foreground(&mut self);
-    fn draw_grids(&mut self);
     fn draw_brick(&mut self, pos: &Position, color: Color);
-    fn draw_text(&mut self, row: i16, msg: &str);
+    fn draw_text(&mut self, pos: &Position, msg: &str);
+    fn draw_debugging_grids(&mut self);
 }
 
 /// Allow to query the game world.
