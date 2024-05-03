@@ -6,13 +6,13 @@ use rand::random;
 use crate::common::{Button, Color, GamePad, GameUI, GameWorld, Position};
 use crate::tetromino::{Shape, Tetromino};
 
-// region: TetrisHeap -----------------------------------------------------------------------------
+// region: PlayField ------------------------------------------------------------------------------
 
-struct TetrisHeap {
+struct PlayField {
     spaces: HashMap<Position, Color>,
 }
 
-impl TetrisHeap {
+impl PlayField {
     const WIDTH: i16 = 10;
     const HEIGHT: i16 = 20;
 
@@ -31,20 +31,20 @@ impl TetrisHeap {
         }
     }
 
-    fn destroy_completed_rows(&mut self) -> u32 {
-        // TODO: Make it more functional!
-        // TODO: Make types of `i16` and `usize` play nicer!
-        let mut rows_to_destroy: Vec<i16> = Vec::new();
-        for y in (0..Self::HEIGHT).rev() {
-            let n_spaces_filled = self.spaces.keys().filter(|&pos| pos.xy().1 == y).count();
-            if n_spaces_filled == Self::WIDTH as usize {
-                rows_to_destroy.push(y);
-            } else if n_spaces_filled == 0 {
-                break;
-            }
-        }
-        self.destroy_rows(&rows_to_destroy);
-        rows_to_destroy.len() as u32
+    fn destroy_completed_rows(&mut self) -> i16 {
+        let rows_completed: Vec<i16> = (0..Self::HEIGHT).into_iter()
+            .filter(|&row| {
+                let n_filled = self.spaces.keys()
+                    .filter(|&pos| {
+                        let (_, y) = pos.xy();
+                        y == row
+                    })
+                    .count() as i16;
+                n_filled == Self::WIDTH
+            })
+            .collect();
+        self.destroy_rows(&rows_completed);
+        rows_completed.len() as i16
     }
 
     fn fade_to_gray(&mut self) {
@@ -81,7 +81,7 @@ impl TetrisHeap {
     }
 }
 
-impl GameWorld for TetrisHeap {
+impl GameWorld for PlayField {
     fn is_free(&self, positions: &[crate::common::Position]) -> bool {
         for position in positions {
             // Check if the position is out of the bounds.
@@ -108,7 +108,7 @@ pub struct Tetris {
     fall_speed: i32,
     next_tetromino: Option<Tetromino>,
     active_tetromino: Option<Tetromino>,
-    heap: TetrisHeap,
+    play_field: PlayField,
     score: u32,
     cheat_codes: String,
     is_game_over: bool,
@@ -116,7 +116,7 @@ pub struct Tetris {
 }
 
 impl Tetris {
-    const TOP_CENTER_POS: Position = Position::new(TetrisHeap::WIDTH / 2 - 2, 0);
+    const TOP_CENTER_POS: Position = Position::new(PlayField::WIDTH / 2 - 2, 0);
 
     const MAX_FALL_SPEED: i32 = 20;
     const SCORE_1_ROW_DESTROYED: u32 = 10;
@@ -131,7 +131,7 @@ impl Tetris {
             fall_speed: 1,
             next_tetromino: None,
             active_tetromino: None,
-            heap: TetrisHeap::new(),
+            play_field: PlayField::new(),
             score: 0,
             cheat_codes: String::new(),
             is_game_over: false,
@@ -145,7 +145,7 @@ impl Tetris {
         self.fall_speed = 1;
         self.next_tetromino = None;
         self.active_tetromino = None;
-        self.heap.clear();
+        self.play_field.clear();
         self.score = 0;
         self.cheat_codes.clear();
         self.is_game_over = false;
@@ -158,11 +158,11 @@ impl Tetris {
         self.loop_count += 1;
         if self.active_tetromino.is_none() {
             let tetromino = self.take_next_tetromino();
-            if self.heap.is_free(tetromino.bricks()) {
+            if self.play_field.is_free(tetromino.bricks()) {
                 self.active_tetromino = Some(tetromino);
             } else {
                 println!("Game is over!");
-                self.heap.fade_to_gray();
+                self.play_field.fade_to_gray();
                 self.is_game_over = true;
             }
         }
@@ -186,12 +186,12 @@ impl Tetris {
         let fall_per_n_loops = self.fall_per_n_loops();
         if self.loop_count % fall_per_n_loops == 0 {
             if let Some(tetromino) = self.active_tetromino.as_mut() {
-                let has_fallen_down = tetromino.fall_down(&self.heap);
+                let has_fallen_down = tetromino.fall_down(&self.play_field);
                 if !has_fallen_down {
                     // The tetromino has reached the bottom.
-                    self.heap.fill_spaces(tetromino.bricks(), tetromino.color());
+                    self.play_field.fill_spaces(tetromino.bricks(), tetromino.color());
                     self.active_tetromino = None;
-                    let n_rows_destroyed = self.heap.destroy_completed_rows();
+                    let n_rows_destroyed = self.play_field.destroy_completed_rows();
                     self.score += match n_rows_destroyed {
                         0 => 0,
                         1 => Self::SCORE_1_ROW_DESTROYED,
@@ -213,18 +213,18 @@ impl Tetris {
 
         // Draw the wall surrounding the play field.
         let wall_color = Color::Gray;
-        for y in 0..=TetrisHeap::HEIGHT {
+        for y in 0..=PlayField::HEIGHT {
             ui.draw_brick(&Position::new(0, y), wall_color);
-            ui.draw_brick(&Position::new(TetrisHeap::WIDTH + 1, y), wall_color);
+            ui.draw_brick(&Position::new(PlayField::WIDTH + 1, y), wall_color);
         }
-        for x in 0..=TetrisHeap::WIDTH {
-            ui.draw_brick(&Position::new(x, TetrisHeap::HEIGHT), wall_color);
+        for x in 0..=PlayField::WIDTH {
+            ui.draw_brick(&Position::new(x, PlayField::HEIGHT), wall_color);
         }
 
         // Draw the inactive bricks in the play field and the active tetromino.
         // Note: We move the bricks to the right by 1 unit to leave room for the left wall.
         let right_by_1 = (1, 0);
-        for (position, color) in &self.heap.spaces {
+        for (position, color) in &self.play_field.spaces {
             ui.draw_brick(&position.updated(right_by_1), *color);
         }
         if let Some(tetromino) = self.active_tetromino.as_ref() {
@@ -236,7 +236,7 @@ impl Tetris {
 
         // Texts are shown on the right panel, so leave space for the play field
         // + 2 units for the wall + 2 units for left margin.
-        let text_x = TetrisHeap::WIDTH + 4;
+        let text_x = PlayField::WIDTH + 4;
 
         ui.draw_text(&Position::new(text_x, 1), &format!("Score: {}", self.score));
         ui.draw_text(&Position::new(text_x, 2), &format!("Level: {}", self.level()));
@@ -311,7 +311,7 @@ impl Tetris {
             return;
         }
         if let Some(tetromino) = self.active_tetromino.as_mut() {
-            tetromino.move_towards(direction, &self.heap);
+            tetromino.move_towards(direction, &self.play_field);
         }
     }
 
@@ -321,7 +321,7 @@ impl Tetris {
         }
         if let Some(tetromino) = self.active_tetromino.as_mut() {
             if is_pressed {
-                tetromino.rotate_right(&self.heap);
+                tetromino.rotate_right(&self.play_field);
             }
         }
     }
@@ -332,7 +332,7 @@ impl Tetris {
         }
         if let Some(tetromino) = self.active_tetromino.as_mut() {
             if is_pressed {
-                tetromino.fall_to_bottom(&self.heap);
+                tetromino.fall_to_bottom(&self.play_field);
             }
         }
     }
@@ -375,12 +375,12 @@ impl Tetris {
                 self.start_game();
             }
             "obladi" => {
-                let rows = vec![TetrisHeap::HEIGHT - 1];
-                self.heap.destroy_rows(&rows);
+                let rows = vec![PlayField::HEIGHT - 1];
+                self.play_field.destroy_rows(&rows);
             }
             "oblada" => {
-                let rows = vec![TetrisHeap::HEIGHT - 1, TetrisHeap::HEIGHT - 2];
-                self.heap.destroy_rows(&rows);
+                let rows = vec![PlayField::HEIGHT - 1, PlayField::HEIGHT - 2];
+                self.play_field.destroy_rows(&rows);
             }
             "hungup" => {
                 self.score = 0;
