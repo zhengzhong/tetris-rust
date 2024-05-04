@@ -1,4 +1,9 @@
-use crate::common::{Color, GameWorld, Position};
+use super::common::{Color, Position};
+
+/// A trait allowing the tetromino to query the game world (play field).
+pub trait GameWorld {
+    fn is_free(&self, positions: &[Position]) -> bool;
+}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Shape {
@@ -170,10 +175,6 @@ impl Tetromino {
 
     pub fn color(&self) -> Color {
         self.shape.color()
-    }
-
-    pub fn position(&self) -> &Position {
-        &self.position
     }
 
     pub fn bricks(&self) -> &[Position] {

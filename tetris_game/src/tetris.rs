@@ -3,8 +3,8 @@ use std::mem;
 
 use rand::random;
 
-use crate::common::{Button, Color, GamePad, GameUI, GameWorld, Position};
-use crate::tetromino::{Shape, Tetromino};
+use super::common::{Button, Color, GamePad, GameUI, Position};
+use super::tetromino::{GameWorld, Shape, Tetromino};
 
 // region: PlayField ------------------------------------------------------------------------------
 

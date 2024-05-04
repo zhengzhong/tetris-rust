@@ -2,11 +2,11 @@ use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 use macroquad::prelude::*; // TODO: Should not depend on macroquad
 
-use crate::common::Button;
-use crate::tetris::Tetris;
+use tetris_game::Tetris;
+
 use crate::ui::{MacroquadGamePad, MacroquadUI};
 
-pub async fn play() {
+pub async fn play_game() {
     println!("screen size: {} x {}", screen_width(), screen_height());
 
     let mut ui = MacroquadUI::new();
@@ -32,23 +32,8 @@ pub async fn play() {
         n_loops += 1;
         t = SystemTime::now();
 
-        vec![
-            (KeyCode::Left, Button::Left),
-            (KeyCode::Right, Button::Right),
-            (KeyCode::Up, Button::Up),
-            (KeyCode::Down, Button::Down),
-            (KeyCode::Space, Button::A),
-            (KeyCode::Tab, Button::B),
-            (KeyCode::LeftControl, Button::Select),
-            (KeyCode::Enter, Button::Start),
-        ]
-            .into_iter()
-            .for_each(|(key, button)| {
-                pad.set_pressed(button, is_key_pressed(key));
-            });
-        pad.set_cheat_code(get_char_pressed());
-
         tetris.start_loop();
+        pad.refresh_input();
         tetris.process_input(&pad);
         tetris.update_state();
         tetris.draw(&mut ui);
