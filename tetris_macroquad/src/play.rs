@@ -14,7 +14,6 @@ pub async fn play_game() {
     let mut tetris = Tetris::new();
 
     ui.clear_background();
-    tetris.start_game();
 
     let interval = Duration::from_millis(25);
     let mut n_loops = 0;
@@ -35,7 +34,7 @@ pub async fn play_game() {
         tetris.start_loop();
         pad.refresh_input();
         tetris.process_input(&pad);
-        tetris.update_state();
+        tetris.update();
         tetris.draw(&mut ui);
         tetris.end_loop();
 
