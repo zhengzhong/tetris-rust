@@ -73,8 +73,3 @@ pub trait GameUI {
     fn draw_text(&mut self, pos: &Position, msg: &str);
     fn draw_debugging_grids(&mut self);
 }
-
-/// Allow to query the game world.
-pub trait GameWorld {
-    fn is_free(&self, positions: &[Position]) -> bool;
-}

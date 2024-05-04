@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use tetris_in_rust;
+use tetris_macroquad;
 
 fn window_conf() -> Conf {
     Conf {
@@ -14,5 +14,5 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    tetris_in_rust::play().await
+    tetris_macroquad::play_game().await
 }

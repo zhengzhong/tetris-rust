@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use macroquad::prelude::*;
 
-use crate::common::{Button, Color as TetrisColor, GamePad, GameUI, Position};
+use tetris_game::{Button, Color as TetrisColor, GamePad, GameUI, Position};
 
 pub struct MacroquadGamePad {
     pressed: HashMap<Button, bool>,
@@ -16,12 +16,23 @@ impl MacroquadGamePad {
         }
     }
 
-    pub fn set_pressed(&mut self, button: Button, pressed: bool) {
-        self.pressed.insert(button, pressed);
-    }
+    pub fn refresh_input(&mut self) {
+        vec![
+            (KeyCode::Left, Button::Left),
+            (KeyCode::Right, Button::Right),
+            (KeyCode::Up, Button::Up),
+            (KeyCode::Down, Button::Down),
+            (KeyCode::Space, Button::A),
+            (KeyCode::Tab, Button::B),
+            (KeyCode::LeftControl, Button::Select),
+            (KeyCode::Enter, Button::Start),
+        ]
+            .into_iter()
+            .for_each(|(key, button)| {
+                self.pressed.insert(button, is_key_pressed(key));
+            });
 
-    pub fn set_cheat_code(&mut self, cheat_code: Option<char>) {
-        match cheat_code {
+        match get_char_pressed() {
             Some(ch) if ch >= 'a' && ch <= 'z' => self.cheat_code = Some(ch),
             _ => self.cheat_code = None,
         }
