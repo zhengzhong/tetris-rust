@@ -59,11 +59,11 @@ impl GamePad for MacroquadGamePad {
     }
 
     fn is_pressed(&self, button: Button) -> bool {
-        self.pressed.get(&button).unwrap_or_else(|| &false).clone()
+        *self.pressed.get(&button).unwrap_or(&false)
     }
 
     fn cheat_code(&self) -> Option<char> {
-        self.cheat_code.clone()
+        self.cheat_code
     }
 }
 
@@ -118,7 +118,7 @@ impl GameUI for MacroquadUI {
 
     /// Draw a brick on the left-side panel.
     /// Size of the left-side panel is 10x20 bricks.
-    fn draw_brick(&mut self, pos: &Position, color: TetrisColor) {
+    fn draw_brick(&mut self, pos: Position, color: TetrisColor) {
         let (screen_x, screen_y) = self.to_screen_xy(pos.xy());
         let color = to_color(color);
         draw_rectangle(
@@ -150,7 +150,7 @@ impl GameUI for MacroquadUI {
         );
     }
 
-    fn draw_text(&mut self, pos: &Position, msg: &str) {
+    fn draw_text(&mut self, pos: Position, msg: &str) {
         let (screen_x, screen_y) = self.to_screen_xy(pos.xy());
         draw_text(msg, screen_x, screen_y, Self::FONT_SIZE, WHITE);
     }

@@ -23,7 +23,7 @@ impl PlayField {
 
     pub fn fill_spaces(&mut self, positions: &[Position], color: Color) {
         for position in positions {
-            let old_color = self.spaces.insert(position.clone(), color);
+            let old_color = self.spaces.insert(*position, color);
             if let Some(old_color) = old_color {
                 println!("[WARN] Position {} already had color {}", position, old_color);
             }
@@ -73,7 +73,7 @@ impl PlayField {
                     .filter(|&row| row > &y)
                     .count();
                 let new_pos = Position::new(x, y + n_rows_to_fall as i16);
-                (new_pos, color.clone())
+                (new_pos, *color)
             })
             .collect();
         self.spaces = new_spaces;

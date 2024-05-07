@@ -1,8 +1,7 @@
 use std::fmt::Display;
 use std::hash::Hash;
 
-// TODO: Make it  `Copy`
-#[derive(Debug, PartialEq, PartialOrd, Clone, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Position {
     x: i16,
     y: i16,
@@ -69,7 +68,7 @@ pub trait GamePad {
 /// Allow to draw onto the game UI.
 pub trait GameUI {
     fn draw_background(&mut self);
-    fn draw_brick(&mut self, pos: &Position, color: Color);
-    fn draw_text(&mut self, pos: &Position, msg: &str);
+    fn draw_brick(&mut self, pos: Position, color: Color);
+    fn draw_text(&mut self, pos: Position, msg: &str);
     fn draw_debugging_grids(&mut self);
 }
