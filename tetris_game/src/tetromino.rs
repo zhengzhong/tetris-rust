@@ -43,7 +43,7 @@ impl Shape {
         }
     }
 
-    fn get_bricks(&self, position: &Position, degree: i16) -> Vec<Position> {
+    fn get_bricks(&self, position: Position, degree: i16) -> Vec<Position> {
         let (x, y) = position.xy();
         match self {
             Shape::I => {
@@ -73,7 +73,7 @@ impl Shape {
                 ]
             }
             Shape::T => rotate_3x3(
-                &position,
+                position,
                 vec![
                     Position::new(0, 0),
                     Position::new(1, 0),
@@ -83,7 +83,7 @@ impl Shape {
                 degree,
             ),
             Shape::J => rotate_3x3(
-                &position,
+                position,
                 vec![
                     Position::new(2, 0),
                     Position::new(2, 1),
@@ -93,7 +93,7 @@ impl Shape {
                 degree,
             ),
             Shape::L => rotate_3x3(
-                &position,
+                position,
                 vec![
                     Position::new(0, 0),
                     Position::new(0, 1),
@@ -103,7 +103,7 @@ impl Shape {
                 degree,
             ),
             Shape::S => rotate_3x3(
-                &position,
+                position,
                 vec![
                     Position::new(0, 1),
                     Position::new(1, 0),
@@ -113,7 +113,7 @@ impl Shape {
                 degree,
             ),
             Shape::Z => rotate_3x3(
-                &position,
+                position,
                 vec![
                     Position::new(0, 0),
                     Position::new(1, 0),
@@ -126,7 +126,7 @@ impl Shape {
     }
 }
 
-fn rotate_3x3(top_left: &Position, bricks: Vec<Position>, degree: i16) -> Vec<Position> {
+fn rotate_3x3(top_left: Position, bricks: Vec<Position>, degree: i16) -> Vec<Position> {
     let (top_left_x, top_left_y) = top_left.xy();
     let n_times = degree / 90;
     bricks
@@ -157,10 +157,9 @@ pub struct Tetromino {
 }
 
 impl Tetromino {
-    pub fn new(shape: Shape, position: &Position) -> Self {
-        let position = position.clone();
+    pub fn new(shape: Shape, position: Position) -> Self {
         let degree = 0;
-        let bricks = shape.get_bricks(&position, degree);
+        let bricks = shape.get_bricks(position, degree);
         Self {
             shape,
             position,
@@ -191,7 +190,7 @@ impl Tetromino {
         // Cannot move up so `dy` must be non-negative.
         let direction = (direction.0, direction.1.max(0));
         let next_position = self.position.updated(direction);
-        let next_bricks = self.shape.get_bricks(&next_position, self.degree);
+        let next_bricks = self.shape.get_bricks(next_position, self.degree);
         if world.is_free(&next_bricks) {
             self.position = next_position;
             self.bricks = next_bricks;
@@ -213,7 +212,7 @@ impl Tetromino {
 
     pub fn rotate_right(&mut self, world: &dyn GameWorld) -> bool {
         let next_degree = (self.degree + 90) % 360;
-        let next_bricks = self.shape.get_bricks(&self.position, next_degree);
+        let next_bricks = self.shape.get_bricks(self.position, next_degree);
         if world.is_free(&next_bricks) {
             self.degree = next_degree;
             self.bricks = next_bricks;

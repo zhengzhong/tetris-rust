@@ -49,9 +49,9 @@ impl State for Intro {
 
     fn draw(&self, ui: &mut dyn GameUI) {
         for pos in &self.bricks {
-            ui.draw_brick(pos, self.color);
+            ui.draw_brick(*pos, self.color);
         }
-        ui.draw_text(&Position::new(5, 8), "Start Game");
+        ui.draw_text(Position::new(5, 8), "Start Game");
     }
 
     fn end_loop(&self) -> Option<StateName> {

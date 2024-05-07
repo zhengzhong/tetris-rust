@@ -68,19 +68,19 @@ impl Ongoing {
     fn take_next_tetromino(&mut self) -> Tetromino {
         // Swap in a new random tetromino into `next_tetromino`, getting its current value out.
         let mut next_tetromino = Some(
-            Tetromino::new(Shape::pick(random()), &Position::new(0, 0))
+            Tetromino::new(Shape::pick(random()), Position::new(0, 0))
         );
         mem::swap(&mut self.next_tetromino, &mut next_tetromino);
         match next_tetromino {
-            Some(tetromino) => Tetromino::new(tetromino.shape(), &Self::TOP_CENTER_POS),
-            None => Tetromino::new(Shape::pick(random()), &Self::TOP_CENTER_POS),
+            Some(tetromino) => Tetromino::new(tetromino.shape(), Self::TOP_CENTER_POS),
+            None => Tetromino::new(Shape::pick(random()), Self::TOP_CENTER_POS),
         }
     }
 
     fn cheat(&mut self, cheat_codes: &str) {
         match cheat_codes {
             "solongmarianne" => {
-                self.next_tetromino = Some(Tetromino::new(Shape::I, &Position::new(0, 0)));
+                self.next_tetromino = Some(Tetromino::new(Shape::I, Position::new(0, 0)));
             },
             "paintitblack" => {
                 self.play_field.clear();
@@ -198,23 +198,23 @@ impl State for Ongoing {
         // Draw the wall surrounding the play field.
         let wall_color = Color::Gray;
         for y in 0..=PlayField::HEIGHT {
-            ui.draw_brick(&Position::new(0, y), wall_color);
-            ui.draw_brick(&Position::new(PlayField::WIDTH + 1, y), wall_color);
+            ui.draw_brick(Position::new(0, y), wall_color);
+            ui.draw_brick(Position::new(PlayField::WIDTH + 1, y), wall_color);
         }
         for x in 0..=PlayField::WIDTH {
-            ui.draw_brick(&Position::new(x, PlayField::HEIGHT), wall_color);
+            ui.draw_brick(Position::new(x, PlayField::HEIGHT), wall_color);
         }
 
         // Draw the inactive bricks in the play field and the active tetromino.
         // Note: We move the bricks to the right by 1 unit to leave room for the left wall.
         let right_by_1 = (1, 0);
         for (position, color) in self.play_field.spaces() {
-            ui.draw_brick(&position.updated(right_by_1), *color);
+            ui.draw_brick(position.updated(right_by_1), *color);
         }
         if let Some(tetromino) = self.active_tetromino.as_ref() {
             let color = tetromino.color();
             for brick in tetromino.bricks() {
-                ui.draw_brick(&brick.updated(right_by_1), color);
+                ui.draw_brick(brick.updated(right_by_1), color);
             }
         }
 
@@ -222,25 +222,25 @@ impl State for Ongoing {
         // + 2 units for the wall + 2 units for left margin.
         let text_x = PlayField::WIDTH + 4;
 
-        ui.draw_text(&Position::new(text_x, 1), &format!("Score: {}", self.score));
-        ui.draw_text(&Position::new(text_x, 2), &format!("Level: {}", self.level()));
-        ui.draw_text(&Position::new(text_x, 3), &self.cheat_codes);
+        ui.draw_text(Position::new(text_x, 1), &format!("Score: {}", self.score));
+        ui.draw_text(Position::new(text_x, 2), &format!("Level: {}", self.level()));
+        ui.draw_text(Position::new(text_x, 3), &self.cheat_codes);
         if let Some(next_tetromino) = self.next_tetromino.as_ref() {
-            ui.draw_text(&Position::new(text_x, 4), "Next:");
+            ui.draw_text(Position::new(text_x, 4), "Next:");
             let aligned_with_text = (text_x, 5);
             let color = next_tetromino.color();
             for brick in next_tetromino.bricks() {
-                ui.draw_brick(&brick.updated(aligned_with_text), color);
+                ui.draw_brick(brick.updated(aligned_with_text), color);
             }
         }
         if self.is_game_over {
-            ui.draw_text(&Position::new(text_x, 9), "Game Over!");
+            ui.draw_text(Position::new(text_x, 9), "Game Over!");
         }
 
         if self.is_debug_enabled {
-            ui.draw_text(&Position::new(text_x, 11), "---- DEBUG ----");
-            ui.draw_text(&Position::new(text_x, 12), &format!("Loop count: {}", self.loop_count));
-            ui.draw_text(&Position::new(text_x, 13), &format!("Fall speed: {}", self.fall_speed));
+            ui.draw_text(Position::new(text_x, 11), "---- DEBUG ----");
+            ui.draw_text(Position::new(text_x, 12), &format!("Loop count: {}", self.loop_count));
+            ui.draw_text(Position::new(text_x, 13), &format!("Fall speed: {}", self.fall_speed));
         }
     }
 
