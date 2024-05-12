@@ -1,6 +1,6 @@
+use macroquad::prelude::*; // TODO: Should not depend on macroquad
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
-use macroquad::prelude::*; // TODO: Should not depend on macroquad
 
 use tetris_game::Tetris;
 
@@ -26,7 +26,10 @@ pub async fn play_game() {
             sleep(dt_to_sleep);
         } else {
             let overrun_millis = (dt - interval).as_millis();
-            println!("[WARN] Loop #{} overran {} millis!", n_loops, overrun_millis);
+            println!(
+                "[WARN] Loop #{} overran {} millis!",
+                n_loops, overrun_millis
+            );
         }
         n_loops += 1;
         t = SystemTime::now();

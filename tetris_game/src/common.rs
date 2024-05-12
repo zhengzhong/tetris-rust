@@ -39,7 +39,7 @@ pub enum Color {
     Gray,
 }
 
-impl Copy for Color { }
+impl Copy for Color {}
 
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -71,4 +71,14 @@ pub trait GameUI {
     fn draw_brick(&mut self, pos: Position, color: Color);
     fn draw_text(&mut self, pos: Position, msg: &str);
     fn draw_debugging_grids(&mut self);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn color_names() {
+        assert_eq!(format!("{}", Color::Teal), "Teal");
+    }
 }

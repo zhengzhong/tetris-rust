@@ -2,9 +2,9 @@ use std::mem;
 
 use rand::random;
 
-use crate::{Button, Color, GamePad, GameUI, Position};
 use crate::playfield::PlayField;
 use crate::tetromino::{GameWorld, Shape, Tetromino};
+use crate::{Button, Color, GamePad, GameUI, Position};
 
 use super::{State, StateName};
 
@@ -67,9 +67,7 @@ impl Ongoing {
 
     fn take_next_tetromino(&mut self) -> Tetromino {
         // Swap in a new random tetromino into `next_tetromino`, getting its current value out.
-        let mut next_tetromino = Some(
-            Tetromino::new(Shape::pick(random()), Position::new(0, 0))
-        );
+        let mut next_tetromino = Some(Tetromino::new(Shape::pick(random()), Position::new(0, 0)));
         mem::swap(&mut self.next_tetromino, &mut next_tetromino);
         match next_tetromino {
             Some(tetromino) => Tetromino::new(tetromino.shape(), Self::TOP_CENTER_POS),
@@ -81,7 +79,7 @@ impl Ongoing {
         match cheat_codes {
             "solongmarianne" => {
                 self.next_tetromino = Some(Tetromino::new(Shape::I, Position::new(0, 0)));
-            },
+            }
             "paintitblack" => {
                 self.play_field.clear();
             }
@@ -101,7 +99,7 @@ impl Ongoing {
             }
             _ => {
                 println!("{} ?", cheat_codes);
-            },
+            }
         }
     }
 }
@@ -173,7 +171,8 @@ impl State for Ongoing {
                 let has_fallen_down = tetromino.fall_down(&self.play_field);
                 if !has_fallen_down {
                     // The tetromino has reached the bottom.
-                    self.play_field.fill_spaces(tetromino.bricks(), tetromino.color());
+                    self.play_field
+                        .fill_spaces(tetromino.bricks(), tetromino.color());
                     self.active_tetromino = None;
                     let n_rows_destroyed = self.play_field.destroy_completed_rows();
                     self.score += match n_rows_destroyed {
@@ -223,7 +222,10 @@ impl State for Ongoing {
         let text_x = PlayField::WIDTH + 4;
 
         ui.draw_text(Position::new(text_x, 1), &format!("Score: {}", self.score));
-        ui.draw_text(Position::new(text_x, 2), &format!("Level: {}", self.level()));
+        ui.draw_text(
+            Position::new(text_x, 2),
+            &format!("Level: {}", self.level()),
+        );
         ui.draw_text(Position::new(text_x, 3), &self.cheat_codes);
         if let Some(next_tetromino) = self.next_tetromino.as_ref() {
             ui.draw_text(Position::new(text_x, 4), "Next:");
@@ -239,8 +241,14 @@ impl State for Ongoing {
 
         if self.is_debug_enabled {
             ui.draw_text(Position::new(text_x, 11), "---- DEBUG ----");
-            ui.draw_text(Position::new(text_x, 12), &format!("Loop count: {}", self.loop_count));
-            ui.draw_text(Position::new(text_x, 13), &format!("Fall speed: {}", self.fall_speed));
+            ui.draw_text(
+                Position::new(text_x, 12),
+                &format!("Loop count: {}", self.loop_count),
+            );
+            ui.draw_text(
+                Position::new(text_x, 13),
+                &format!("Fall speed: {}", self.fall_speed),
+            );
         }
     }
 

@@ -1,7 +1,5 @@
 use macroquad::prelude::*;
 
-use tetris_macroquad;
-
 fn window_conf() -> Conf {
     Conf {
         window_title: String::from("Tetris"),

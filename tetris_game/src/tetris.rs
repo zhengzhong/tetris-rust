@@ -30,9 +30,14 @@ impl Tetris {
 
     pub fn end_loop(&mut self) {
         let next_state_name = self.state.end_loop();
-        match next_state_name {
-            Some(name) => self.state = create_state(name),
-            None => (),
+        if let Some(state_name) = next_state_name {
+            self.state = create_state(state_name);
         }
+    }
+}
+
+impl Default for Tetris {
+    fn default() -> Self {
+        Self::new()
     }
 }
