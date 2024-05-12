@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use macroquad::prelude::*;
+use std::collections::HashMap;
 
 use tetris_game::{Button, Color as TetrisColor, GamePad, GameUI, Position};
 
@@ -27,10 +27,10 @@ impl MacroquadGamePad {
             (KeyCode::LeftControl, Button::Select),
             (KeyCode::Enter, Button::Start),
         ]
-            .into_iter()
-            .for_each(|(key, button)| {
-                self.pressed.insert(button, is_key_pressed(key));
-            });
+        .into_iter()
+        .for_each(|(key, button)| {
+            self.pressed.insert(button, is_key_pressed(key));
+        });
 
         match get_char_pressed() {
             Some(ch) if ch >= 'a' && ch <= 'z' => self.cheat_code = Some(ch),
@@ -96,8 +96,7 @@ impl MacroquadUI {
 }
 
 impl GameUI for MacroquadUI {
-    fn draw_background(&mut self) {
-    }
+    fn draw_background(&mut self) {}
 
     fn draw_debugging_grids(&mut self) {
         let screen_x_max = screen_width();
@@ -122,30 +121,40 @@ impl GameUI for MacroquadUI {
         let (screen_x, screen_y) = self.to_screen_xy(pos.xy());
         let color = to_color(color);
         draw_rectangle(
-            screen_x, screen_y,
-            Self::BRICK_SIZE, Self::BRICK_SIZE,
+            screen_x,
+            screen_y,
+            Self::BRICK_SIZE,
+            Self::BRICK_SIZE,
             color,
         );
 
         // Draw shadows.
         draw_rectangle(
-            screen_x, screen_y,
-            Self::BRICK_SIZE, Self::BRICK_SHADOW,
+            screen_x,
+            screen_y,
+            Self::BRICK_SIZE,
+            Self::BRICK_SHADOW,
             darken(&color),
         );
         draw_rectangle(
-            screen_x, screen_y,
-            Self::BRICK_SHADOW, Self::BRICK_SIZE,
+            screen_x,
+            screen_y,
+            Self::BRICK_SHADOW,
+            Self::BRICK_SIZE,
             darken(&color),
         );
         draw_rectangle(
-            screen_x + Self::BRICK_SIZE - Self::BRICK_SHADOW, screen_y + Self::BRICK_SHADOW,
-            Self::BRICK_SHADOW, Self::BRICK_SIZE - Self::BRICK_SHADOW,
+            screen_x + Self::BRICK_SIZE - Self::BRICK_SHADOW,
+            screen_y + Self::BRICK_SHADOW,
+            Self::BRICK_SHADOW,
+            Self::BRICK_SIZE - Self::BRICK_SHADOW,
             lighten(&color),
         );
         draw_rectangle(
-            screen_x, screen_y + Self::BRICK_SIZE - Self::BRICK_SHADOW,
-            Self::BRICK_SIZE, Self::BRICK_SHADOW,
+            screen_x,
+            screen_y + Self::BRICK_SIZE - Self::BRICK_SHADOW,
+            Self::BRICK_SIZE,
+            Self::BRICK_SHADOW,
             lighten(&color),
         );
     }
@@ -177,7 +186,7 @@ fn darken(color: &Color) -> Color {
         g: color.g * 0.75,
         b: color.b * 0.75,
         a: 1.0,
-     }
+    }
 }
 
 fn lighten(color: &Color) -> Color {
@@ -186,7 +195,7 @@ fn lighten(color: &Color) -> Color {
         g: 1.0_f32.min(color.g * 1.25),
         b: 1.0_f32.min(color.b * 1.25),
         a: 1.0,
-     }
+    }
 }
 
 // endregion

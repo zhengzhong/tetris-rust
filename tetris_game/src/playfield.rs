@@ -25,15 +25,21 @@ impl PlayField {
         for position in positions {
             let old_color = self.spaces.insert(*position, color);
             if let Some(old_color) = old_color {
-                println!("[WARN] Position {} already had color {}", position, old_color);
+                println!(
+                    "[WARN] Position {} already had color {}",
+                    position, old_color
+                );
             }
         }
     }
 
     pub fn destroy_completed_rows(&mut self) -> i16 {
-        let rows_completed: Vec<i16> = (0..Self::HEIGHT).into_iter()
+        let rows_completed: Vec<i16> = (0..Self::HEIGHT)
+            .into_iter()
             .filter(|&row| {
-                let n_filled = self.spaces.keys()
+                let n_filled = self
+                    .spaces
+                    .keys()
                     .filter(|&pos| {
                         let (_, y) = pos.xy();
                         y == row
@@ -47,7 +53,9 @@ impl PlayField {
     }
 
     pub fn fade_to_gray(&mut self) {
-        self.spaces.values_mut().for_each(|color| *color = Color::Gray);
+        self.spaces
+            .values_mut()
+            .for_each(|color| *color = Color::Gray);
     }
 
     pub fn clear(&mut self) {
@@ -59,7 +67,8 @@ impl PlayField {
             return;
         }
 
-        let new_spaces: HashMap<Position, Color> = self.spaces
+        let new_spaces: HashMap<Position, Color> = self
+            .spaces
             .iter()
             // Remove those that are to be destroyed.
             .filter(|(pos, _)| {
@@ -69,9 +78,7 @@ impl PlayField {
             // Push those downwards if one or more rows are destroyed below them.
             .map(|(pos, color)| {
                 let (x, y) = pos.xy();
-                let n_rows_to_fall = rows.iter()
-                    .filter(|&row| row > &y)
-                    .count();
+                let n_rows_to_fall = rows.iter().filter(|&row| row > &y).count();
                 let new_pos = Position::new(x, y + n_rows_to_fall as i16);
                 (new_pos, *color)
             })
