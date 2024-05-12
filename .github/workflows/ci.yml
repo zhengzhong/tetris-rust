@@ -1,12 +1,25 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
+  lint:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-Dwarnings"
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo clippy --all-targets --all-features
+
   test:
     name: cargo test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      # - uses: dtolnay/rust-toolchain@stable
       - run: cargo test --all-features
