@@ -37,6 +37,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo test --all-features
 
+  coverage:
+    name: cargo tarpaulin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --all-features --workspace
+
   audit:
     name: cargo audit
     runs-on: ubuntu-latest
