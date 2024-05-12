@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
+use macroquad::prelude::*; // TODO: Should not depend on macroquad
 use std::thread::sleep;
-use std::time::{Duration, SystemTime}; // TODO: Should not depend on macroquad
+use std::time::{Duration, SystemTime};
 
 use tetris_game::Tetris;
 

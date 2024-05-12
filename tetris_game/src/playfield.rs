@@ -35,7 +35,6 @@ impl PlayField {
 
     pub fn destroy_completed_rows(&mut self) -> i16 {
         let rows_completed: Vec<i16> = (0..Self::HEIGHT)
-            .into_iter()
             .filter(|&row| {
                 let n_filled = self
                     .spaces
@@ -89,17 +88,10 @@ impl PlayField {
 
 impl GameWorld for PlayField {
     fn is_free(&self, positions: &[crate::common::Position]) -> bool {
-        for position in positions {
-            // Check if the position is out of the bounds.
+        positions.iter().all(|position| {
             let (x, y) = position.xy();
-            if x < 0 || x >= Self::WIDTH || y < 0 || y >= Self::HEIGHT {
-                return false;
-            }
-            // Check if the position is taken.
-            if self.spaces.contains_key(position) {
-                return false;
-            }
-        }
-        true
+            (0..Self::WIDTH).contains(&x) && (0..Self::HEIGHT).contains(&y) // not out of bound
+            && !self.spaces.contains_key(position) // not occupied
+        })
     }
 }

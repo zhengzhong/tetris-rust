@@ -9,6 +9,17 @@ pub struct MacroquadGamePad {
 }
 
 impl MacroquadGamePad {
+    const KEY_CODE_MAPPINGS: [(KeyCode, Button); 8] = [
+        (KeyCode::Left, Button::Left),
+        (KeyCode::Right, Button::Right),
+        (KeyCode::Up, Button::Up),
+        (KeyCode::Down, Button::Down),
+        (KeyCode::Space, Button::A),
+        (KeyCode::Tab, Button::B),
+        (KeyCode::LeftControl, Button::Select),
+        (KeyCode::Enter, Button::Start),
+    ];
+
     pub fn new() -> Self {
         Self {
             pressed: HashMap::new(),
@@ -17,23 +28,14 @@ impl MacroquadGamePad {
     }
 
     pub fn refresh_input(&mut self) {
-        vec![
-            (KeyCode::Left, Button::Left),
-            (KeyCode::Right, Button::Right),
-            (KeyCode::Up, Button::Up),
-            (KeyCode::Down, Button::Down),
-            (KeyCode::Space, Button::A),
-            (KeyCode::Tab, Button::B),
-            (KeyCode::LeftControl, Button::Select),
-            (KeyCode::Enter, Button::Start),
-        ]
-        .into_iter()
-        .for_each(|(key, button)| {
-            self.pressed.insert(button, is_key_pressed(key));
-        });
+        Self::KEY_CODE_MAPPINGS
+            .iter()
+            .for_each(|(key_code, button)| {
+                self.pressed.insert(*button, is_key_pressed(*key_code));
+            });
 
         match get_char_pressed() {
-            Some(ch) if ch >= 'a' && ch <= 'z' => self.cheat_code = Some(ch),
+            Some(ch) if ch.is_ascii_alphanumeric() => self.cheat_code = Some(ch),
             _ => self.cheat_code = None,
         }
     }
