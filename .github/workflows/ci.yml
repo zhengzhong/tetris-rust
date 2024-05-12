@@ -43,9 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: |
-          cargo install cargo-tarpaulin
-          cargo tarpaulin --all-features --workspace
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin
+      - run: cargo tarpaulin --all-features --workspace
 
   audit:
     name: cargo audit
