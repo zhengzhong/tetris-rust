@@ -72,3 +72,13 @@ pub trait GameUI {
     fn draw_text(&mut self, pos: Position, msg: &str);
     fn draw_debugging_grids(&mut self);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn color_names() {
+        assert_eq!(format!("{}", Color::Teal), "Teal");
+    }
+}
