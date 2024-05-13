@@ -135,27 +135,24 @@ mod tests {
         // row N + 0 falls by +3 rows
         // row N + 3 falls by +1 rows
         // row N + 5 stays still
-        let expected_space: HashMap<Position, Color> = vec![]
-            .into_iter()
-            .chain(
-                positions_at_n0
-                    .iter()
-                    .map(|pos| (pos.updated((0, 3)), Color::Teal)) // fall down by 3 rows
-                    .into_iter(),
-            )
-            .chain(
-                positions_at_n3
-                    .iter()
-                    .map(|pos| (pos.updated((0, 1)), Color::Blue)) // fall down by 1 row
-                    .into_iter(),
-            )
-            .chain(
-                positions_at_n5
-                    .iter()
-                    .map(|pos| (*pos, Color::Green)) // stay still
-                    .into_iter(),
-            )
-            .collect();
+        let fall_by_rows = |n_rows: i16| (0, n_rows);
+        let expected_space: HashMap<Position, Color> = [
+            positions_at_n0
+                .iter()
+                .map(|pos| (pos.updated(fall_by_rows(3)), Color::Teal))
+                .collect::<Vec<_>>(),
+            positions_at_n3
+                .iter()
+                .map(|pos| (pos.updated(fall_by_rows(1)), Color::Blue))
+                .collect::<Vec<_>>(),
+            positions_at_n5
+                .iter()
+                .map(|pos| (pos.updated(fall_by_rows(0)), Color::Green))
+                .collect::<Vec<_>>(),
+        ]
+        .concat()
+        .into_iter()
+        .collect();
         assert_eq!(field.space(), &expected_space);
     }
 
