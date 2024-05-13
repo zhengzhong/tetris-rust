@@ -172,7 +172,7 @@ impl State for Ongoing {
                 if !has_fallen_down {
                     // The tetromino has reached the bottom.
                     self.play_field
-                        .fill_spaces(tetromino.bricks(), tetromino.color());
+                        .fill_space(tetromino.bricks(), tetromino.color());
                     self.active_tetromino = None;
                     let n_rows_destroyed = self.play_field.destroy_completed_rows();
                     self.score += match n_rows_destroyed {
@@ -207,7 +207,7 @@ impl State for Ongoing {
         // Draw the inactive bricks in the play field and the active tetromino.
         // Note: We move the bricks to the right by 1 unit to leave room for the left wall.
         let right_by_1 = (1, 0);
-        for (position, color) in self.play_field.spaces() {
+        for (position, color) in self.play_field.space() {
             ui.draw_brick(position.updated(right_by_1), *color);
         }
         if let Some(tetromino) = self.active_tetromino.as_ref() {
