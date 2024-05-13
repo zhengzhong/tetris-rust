@@ -77,8 +77,23 @@ pub trait GameUI {
 mod tests {
     use super::*;
 
+    macro_rules! test_color_names {
+        ( $( $color:expr ),* ) => {
+            $( assert_eq!(format!("Color::{}", $color), stringify!($color)); )*
+        };
+    }
+
     #[test]
     fn color_names() {
-        assert_eq!(format!("{}", Color::Teal), "Teal");
+        test_color_names!(
+            Color::Teal,
+            Color::Yellow,
+            Color::Purple,
+            Color::Blue,
+            Color::Orange,
+            Color::Green,
+            Color::Red,
+            Color::Gray
+        );
     }
 }
