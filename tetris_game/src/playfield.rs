@@ -25,9 +25,10 @@ impl PlayField {
         for position in positions {
             let old_color = self.space.insert(*position, color);
             if let Some(old_color) = old_color {
-                println!(
-                    "[WARN] Position {} already had color {}",
-                    position, old_color
+                log::error!(
+                    "Position {} is already taken (with color: {})",
+                    position,
+                    old_color
                 );
             }
         }

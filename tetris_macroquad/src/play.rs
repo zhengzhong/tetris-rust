@@ -7,7 +7,11 @@ use tetris_game::Tetris;
 use crate::ui::{MacroquadGamePad, MacroquadUI};
 
 pub async fn play_game() {
-    println!("screen size: {} x {}", screen_width(), screen_height());
+    log::info!(
+        "Starting game with screen size: {} x {}",
+        screen_width(),
+        screen_height()
+    );
 
     let mut ui = MacroquadUI::new();
     let mut pad = MacroquadGamePad::new();
@@ -26,10 +30,7 @@ pub async fn play_game() {
             sleep(dt_to_sleep);
         } else {
             let overrun_millis = (dt - interval).as_millis();
-            println!(
-                "[WARN] Loop #{} overran {} millis!",
-                n_loops, overrun_millis
-            );
+            log::warn!("Loop #{} overran {} millis!", n_loops, overrun_millis);
         }
         n_loops += 1;
         t = SystemTime::now();
