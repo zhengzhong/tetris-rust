@@ -98,7 +98,7 @@ impl Ongoing {
                 self.score += 500;
             }
             _ => {
-                println!("{} ?", cheat_codes);
+                log::info!("Unknown cheat code: {}", cheat_codes);
             }
         }
     }
@@ -116,7 +116,7 @@ impl State for Ongoing {
             if self.play_field.is_free(tetromino.bricks()) {
                 self.active_tetromino = Some(tetromino);
             } else {
-                println!("Game is over!");
+                log::info!("No free space for new tetromino: Game is over!");
                 self.play_field.fade_to_gray();
                 self.is_game_over = true;
             }
@@ -254,7 +254,7 @@ impl State for Ongoing {
 
     fn end_loop(&self) -> Option<StateName> {
         if self.is_game_over && self.is_restarted {
-            println!("Stopping the game");
+            log::info!("Transitioning state: Ongoing to Intro");
             Some(StateName::Intro)
         } else {
             None

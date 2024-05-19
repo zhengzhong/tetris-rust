@@ -77,6 +77,7 @@ impl State for Intro {
 
     fn process_input(&mut self, pad: &dyn GamePad) {
         if pad.is_pressed(Button::Start) {
+            log::info!("Starting game");
             self.is_started = true;
         }
     }
@@ -96,6 +97,7 @@ impl State for Intro {
 
     fn end_loop(&self) -> Option<StateName> {
         if self.is_started {
+            log::info!("Transitioning state: Intro to Ongoing");
             Some(StateName::Ongoing)
         } else {
             None
