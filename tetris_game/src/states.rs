@@ -1,3 +1,4 @@
+use crate::conf::TetrisSettings;
 use crate::{GamePad, GameUI};
 
 pub enum StateName {
@@ -23,9 +24,9 @@ mod ongoing;
 use intro::Intro;
 use ongoing::Ongoing;
 
-pub fn create_state(name: StateName) -> Box<dyn State> {
+pub fn create_state<'a>(name: StateName, settings: &'a TetrisSettings) -> Box<dyn State + 'a> {
     match name {
-        StateName::Intro => Box::new(Intro::new()),
-        StateName::Ongoing => Box::new(Ongoing::new()),
+        StateName::Intro => Box::new(Intro::new(settings)),
+        StateName::Ongoing => Box::new(Ongoing::new(settings)),
     }
 }

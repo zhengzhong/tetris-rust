@@ -3,6 +3,8 @@ use std::collections::HashMap;
 
 use tetris_game::{Button, Color as TetrisColor, GamePad, GameUI, Position};
 
+use crate::conf::{GamePadSettings, UISettings};
+
 pub struct MacroquadGamePad {
     pressed: HashMap<Button, bool>,
     cheat_code: Option<char>,
@@ -20,7 +22,7 @@ impl MacroquadGamePad {
         (KeyCode::Enter, Button::Start),
     ];
 
-    pub fn new() -> Self {
+    pub fn new(_settings: &GamePadSettings) -> Self {
         Self {
             pressed: HashMap::new(),
             cheat_code: None,
@@ -69,15 +71,25 @@ impl GamePad for MacroquadGamePad {
     }
 }
 
-pub struct MacroquadUI;
+pub struct MacroquadUI<'a> {
+    settings: &'a UISettings,
+}
 
-impl MacroquadUI {
-    const BRICK_SIZE: f32 = 40.0;
-    const BRICK_SHADOW: f32 = 3.0;
-    const FONT_SIZE: f32 = 32.0;
+impl<'a> MacroquadUI<'a> {
+    pub fn new(settings: &'a UISettings) -> Self {
+        Self { settings }
+    }
 
-    pub fn new() -> Self {
-        Self
+    pub fn brick_size(&self) -> f32 {
+        f32::from(self.settings.brick_size)
+    }
+
+    pub fn brick_shadow(&self) -> f32 {
+        f32::from(self.settings.brick_shadow)
+    }
+
+    pub fn font_size(&self) -> f32 {
+        f32::from(self.settings.font_size)
     }
 
     pub fn clear_background(&self) {
@@ -85,11 +97,11 @@ impl MacroquadUI {
     }
 
     fn to_screen_x(&self, x: i16) -> f32 {
-        f32::from(x) * Self::BRICK_SIZE
+        f32::from(x) * self.brick_size()
     }
 
     fn to_screen_y(&self, y: i16) -> f32 {
-        f32::from(y) * Self::BRICK_SIZE
+        f32::from(y) * self.brick_size()
     }
 
     fn to_screen_xy(&self, (x, y): (i16, i16)) -> (f32, f32) {
@@ -97,14 +109,14 @@ impl MacroquadUI {
     }
 }
 
-impl GameUI for MacroquadUI {
+impl<'a> GameUI for MacroquadUI<'a> {
     fn draw_background(&mut self) {}
 
     fn draw_debugging_grids(&mut self) {
         let screen_x_max = screen_width();
         let screen_y_max = screen_height();
-        let n_cols = (screen_x_max / Self::BRICK_SIZE).floor() as i16;
-        let n_rows = (screen_y_max / Self::BRICK_SIZE).floor() as i16;
+        let n_cols = (screen_x_max / self.brick_size()).floor() as i16;
+        let n_rows = (screen_y_max / self.brick_size()).floor() as i16;
         // Draw vertical lines.
         for x in 0..=n_cols {
             let screen_x = self.to_screen_x(x);
@@ -125,8 +137,8 @@ impl GameUI for MacroquadUI {
         draw_rectangle(
             screen_x,
             screen_y,
-            Self::BRICK_SIZE,
-            Self::BRICK_SIZE,
+            self.brick_size(),
+            self.brick_size(),
             color,
         );
 
@@ -134,36 +146,36 @@ impl GameUI for MacroquadUI {
         draw_rectangle(
             screen_x,
             screen_y,
-            Self::BRICK_SIZE,
-            Self::BRICK_SHADOW,
+            self.brick_size(),
+            self.brick_shadow(),
             darken(&color),
         );
         draw_rectangle(
             screen_x,
             screen_y,
-            Self::BRICK_SHADOW,
-            Self::BRICK_SIZE,
+            self.brick_shadow(),
+            self.brick_size(),
             darken(&color),
         );
         draw_rectangle(
-            screen_x + Self::BRICK_SIZE - Self::BRICK_SHADOW,
-            screen_y + Self::BRICK_SHADOW,
-            Self::BRICK_SHADOW,
-            Self::BRICK_SIZE - Self::BRICK_SHADOW,
+            screen_x + self.brick_size() - self.brick_shadow(),
+            screen_y + self.brick_shadow(),
+            self.brick_shadow(),
+            self.brick_size() - self.brick_shadow(),
             lighten(&color),
         );
         draw_rectangle(
             screen_x,
-            screen_y + Self::BRICK_SIZE - Self::BRICK_SHADOW,
-            Self::BRICK_SIZE,
-            Self::BRICK_SHADOW,
+            screen_y + self.brick_size() - self.brick_shadow(),
+            self.brick_size(),
+            self.brick_shadow(),
             lighten(&color),
         );
     }
 
     fn draw_text(&mut self, pos: Position, msg: &str) {
         let (screen_x, screen_y) = self.to_screen_xy(pos.xy());
-        draw_text(msg, screen_x, screen_y, Self::FONT_SIZE, WHITE);
+        draw_text(msg, screen_x, screen_y, self.font_size(), WHITE);
     }
 }
 

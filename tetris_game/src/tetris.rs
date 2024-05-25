@@ -1,14 +1,17 @@
 use crate::common::{GamePad, GameUI};
+use crate::conf::TetrisSettings;
 use crate::states::{create_state, State, StateName};
 
-pub struct Tetris {
-    state: Box<dyn State>,
+pub struct Tetris<'a> {
+    settings: &'a TetrisSettings,
+    state: Box<dyn State + 'a>,
 }
 
-impl Tetris {
-    pub fn new() -> Self {
+impl<'a> Tetris<'a> {
+    pub fn new(settings: &'a TetrisSettings) -> Self {
         Self {
-            state: create_state(StateName::Intro),
+            settings,
+            state: create_state(StateName::Intro, settings),
         }
     }
 
@@ -31,13 +34,7 @@ impl Tetris {
     pub fn end_loop(&mut self) {
         let next_state_name = self.state.end_loop();
         if let Some(state_name) = next_state_name {
-            self.state = create_state(state_name);
+            self.state = create_state(state_name, self.settings);
         }
-    }
-}
-
-impl Default for Tetris {
-    fn default() -> Self {
-        Self::new()
     }
 }

@@ -4,32 +4,34 @@ use std::time::{Duration, SystemTime};
 
 use tetris_game::Tetris;
 
+use crate::conf::Settings;
 use crate::ui::{MacroquadGamePad, MacroquadUI};
 
-pub async fn play_game() {
+pub async fn play_game(settings: Settings) {
+    log::info!("Using settings: {:?}", settings);
     log::info!(
         "Starting game with screen size: {} x {}",
         screen_width(),
         screen_height()
     );
 
-    let mut ui = MacroquadUI::new();
-    let mut pad = MacroquadGamePad::new();
-    let mut tetris = Tetris::new();
+    let mut ui = MacroquadUI::new(&settings.ui);
+    let mut pad = MacroquadGamePad::new(&settings.game_pad);
+    let mut tetris = Tetris::new(&settings.tetris);
 
     ui.clear_background();
 
-    let interval = Duration::from_millis(25);
+    let loop_interval = Duration::from_millis(settings.loop_interval_millis as u64);
     let mut n_loops = 0;
     let mut t = SystemTime::now();
     loop {
         // `unwrap` is not safe as occasionally we can get `SystemTimeError` (I don't know why...).
         let dt = SystemTime::now().duration_since(t).unwrap_or_default();
-        if interval > dt {
-            let dt_to_sleep = interval - dt;
+        if loop_interval > dt {
+            let dt_to_sleep = loop_interval - dt;
             sleep(dt_to_sleep);
         } else {
-            let overrun_millis = (dt - interval).as_millis();
+            let overrun_millis = (dt - loop_interval).as_millis();
             log::warn!("Loop #{} overran {} millis!", n_loops, overrun_millis);
         }
         n_loops += 1;

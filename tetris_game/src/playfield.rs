@@ -4,17 +4,26 @@ use super::common::{Color, Position};
 use super::tetromino::GameWorld;
 
 pub struct PlayField {
+    width: u8,
+    height: u8,
     space: HashMap<Position, Color>,
 }
 
 impl PlayField {
-    pub const WIDTH: i16 = 10;
-    pub const HEIGHT: i16 = 20;
-
-    pub fn new() -> Self {
+    pub fn new(width: u8, height: u8) -> Self {
         Self {
+            width,
+            height,
             space: HashMap::new(),
         }
+    }
+
+    pub fn width(&self) -> i16 {
+        self.width as i16
+    }
+
+    pub fn height(&self) -> i16 {
+        self.height as i16
     }
 
     pub fn space(&self) -> &HashMap<Position, Color> {
@@ -35,7 +44,7 @@ impl PlayField {
     }
 
     pub fn destroy_completed_rows(&mut self) -> i16 {
-        let rows_completed: Vec<i16> = (0..Self::HEIGHT)
+        let rows_completed: Vec<i16> = (0..self.height())
             .filter(|&row| {
                 let n_filled = self
                     .space
@@ -45,7 +54,7 @@ impl PlayField {
                         y == row
                     })
                     .count() as i16;
-                n_filled == Self::WIDTH
+                n_filled == self.width()
             })
             .collect();
         self.destroy_rows(&rows_completed);
@@ -91,7 +100,7 @@ impl GameWorld for PlayField {
     fn is_free(&self, positions: &[crate::common::Position]) -> bool {
         positions.iter().all(|position| {
             let (x, y) = position.xy();
-            (0..Self::WIDTH).contains(&x) && (0..Self::HEIGHT).contains(&y) // not out of bound
+            (0..self.width()).contains(&x) && (0..self.height()).contains(&y) // not out of bound
             && !self.space.contains_key(position) // not occupied
         })
     }
@@ -103,14 +112,14 @@ mod tests {
 
     #[test]
     fn destroy_completed_rows() {
-        let mut field = PlayField::new();
-        let n = PlayField::HEIGHT - 6;
+        let mut field = PlayField::new(10, 20);
+        let n = field.height() - 6;
 
         let get_row = |xs: Vec<i16>, y: i16| -> Vec<Position> {
             xs.into_iter().map(|x| Position::new(x, y)).collect()
         };
         let get_complete_row =
-            |y: i16| -> Vec<Position> { get_row((0..PlayField::WIDTH).collect(), y) };
+            |y: i16| -> Vec<Position> { get_row((0..field.width()).collect(), y) };
 
         // row N + 0: not complete
         // row N + 1: complete
@@ -159,7 +168,7 @@ mod tests {
 
     #[test]
     fn fade_to_gray() {
-        let mut field = PlayField::new();
+        let mut field = PlayField::new(10, 20);
         let positions = vec![
             Position::new(0, 0),
             Position::new(1, 1),
