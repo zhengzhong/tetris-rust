@@ -2,15 +2,18 @@ use std::mem;
 
 use rand::random;
 
+use crate::conf::TetrisSettings;
 use crate::playfield::PlayField;
 use crate::tetromino::{GameWorld, Shape, Tetromino};
 use crate::{Button, Color, GamePad, GameUI, Position};
 
 use super::{State, StateName};
 
-pub struct Ongoing {
+pub struct Ongoing<'a> {
+    settings: &'a TetrisSettings,
+
     loop_count: i32,
-    fall_speed: i32,
+
     next_tetromino: Option<Tetromino>,
     active_tetromino: Option<Tetromino>,
     play_field: PlayField,
@@ -21,22 +24,15 @@ pub struct Ongoing {
     is_debug_enabled: bool,
 }
 
-impl Ongoing {
-    const TOP_CENTER_POS: Position = Position::new(PlayField::WIDTH / 2 - 2, 0);
-
-    const MAX_FALL_SPEED: i32 = 20;
-    const SCORE_1_ROW_DESTROYED: u32 = 10;
-    const SCORE_2_ROWS_DESTROYED: u32 = 50;
-    const SCORE_3_ROWS_DESTROYED: u32 = 100;
-    const SCORE_4_ROWS_DESTROYED: u32 = 200;
-
-    pub fn new() -> Self {
+impl<'a> Ongoing<'a> {
+    pub fn new(settings: &'a TetrisSettings) -> Self {
         Self {
+            settings,
+
             loop_count: 0,
-            fall_speed: 1,
             next_tetromino: None,
             active_tetromino: None,
-            play_field: PlayField::new(),
+            play_field: PlayField::new(settings.play_field_width, settings.play_field_height),
             score: 0,
             cheat_codes: String::new(),
             is_game_over: false,
@@ -45,19 +41,12 @@ impl Ongoing {
         }
     }
 
-    fn fall_per_n_loops(&self) -> i32 {
-        let fall_speed = if self.fall_speed < 1 {
-            1 // slowest
-        } else if self.fall_speed > Self::MAX_FALL_SPEED {
-            Self::MAX_FALL_SPEED // fastest
-        } else {
-            self.fall_speed // Within 1..=Self::MAX_FALL_SPEED
-        };
-        1 + Self::MAX_FALL_SPEED - fall_speed
+    fn top_center_pos(&self) -> Position {
+        Position::new(self.play_field.width() / 2 - 2, 0)
     }
 
     fn level(&self) -> u8 {
-        let level = self.score / 100;
+        let level = self.score / self.settings.score_per_level;
         if level <= u8::MAX as u32 {
             level as u8
         } else {
@@ -65,17 +54,36 @@ impl Ongoing {
         }
     }
 
+    /// The current fall pace, computed from `level`. Fall pace is the number
+    /// of game loops for the tetromino to fall by one unit. The smaller the
+    /// fall pace is, the faster the game speed is.
+    fn fall_pace(&self) -> u8 {
+        let level = self.level();
+        let fall_pace = if self.settings.fall_pace_slowest > level {
+            self.settings.fall_pace_slowest - level
+        } else {
+            0
+        };
+        fall_pace.max(self.settings.fall_pace_fastest)
+    }
+
     fn take_next_tetromino(&mut self) -> Tetromino {
         // Swap in a new random tetromino into `next_tetromino`, getting its current value out.
         let mut next_tetromino = Some(Tetromino::new(Shape::pick(random()), Position::new(0, 0)));
         mem::swap(&mut self.next_tetromino, &mut next_tetromino);
         match next_tetromino {
-            Some(tetromino) => Tetromino::new(tetromino.shape(), Self::TOP_CENTER_POS),
-            None => Tetromino::new(Shape::pick(random()), Self::TOP_CENTER_POS),
+            Some(tetromino) => Tetromino::new(tetromino.shape(), self.top_center_pos()),
+            None => Tetromino::new(Shape::pick(random()), self.top_center_pos()),
         }
     }
 
     fn cheat(&mut self, cheat_codes: &str) {
+        if !self.settings.enable_cheating {
+            // Echo the cheat code, but do nothing.
+            log::info!("{}", cheat_codes);
+            return;
+        }
+
         match cheat_codes {
             "solongmarianne" => {
                 self.next_tetromino = Some(Tetromino::new(Shape::I, Position::new(0, 0)));
@@ -84,11 +92,11 @@ impl Ongoing {
                 self.play_field.clear();
             }
             "obladi" => {
-                let rows = vec![PlayField::HEIGHT - 1];
+                let rows = vec![self.play_field.height() - 1];
                 self.play_field.destroy_rows(&rows);
             }
             "oblada" => {
-                let rows = vec![PlayField::HEIGHT - 1, PlayField::HEIGHT - 2];
+                let rows = vec![self.play_field.height() - 1, self.play_field.height() - 2];
                 self.play_field.destroy_rows(&rows);
             }
             "hungup" => {
@@ -98,19 +106,18 @@ impl Ongoing {
                 self.score += 500;
             }
             _ => {
-                log::info!("Unknown cheat code: {}", cheat_codes);
+                log::info!("{} ?", cheat_codes);
             }
         }
     }
 }
 
-impl State for Ongoing {
+impl<'a> State for Ongoing<'a> {
     fn start_loop(&mut self) {
         if self.is_game_over {
             return;
         }
         self.loop_count += 1;
-        self.fall_speed = (self.level() + 1) as i32;
         if self.active_tetromino.is_none() {
             let tetromino = self.take_next_tetromino();
             if self.play_field.is_free(tetromino.bricks()) {
@@ -165,8 +172,8 @@ impl State for Ongoing {
         if self.is_game_over {
             return;
         }
-        let fall_per_n_loops = self.fall_per_n_loops();
-        if self.loop_count % fall_per_n_loops == 0 {
+        let fall_pace = self.fall_pace();
+        if self.loop_count % (fall_pace as i32) == 0 {
             if let Some(tetromino) = self.active_tetromino.as_mut() {
                 let has_fallen_down = tetromino.fall_down(&self.play_field);
                 if !has_fallen_down {
@@ -175,12 +182,12 @@ impl State for Ongoing {
                         .fill_space(tetromino.bricks(), tetromino.color());
                     self.active_tetromino = None;
                     let n_rows_destroyed = self.play_field.destroy_completed_rows();
-                    self.score += match n_rows_destroyed {
-                        0 => 0,
-                        1 => Self::SCORE_1_ROW_DESTROYED,
-                        2 => Self::SCORE_2_ROWS_DESTROYED,
-                        3 => Self::SCORE_3_ROWS_DESTROYED,
-                        _ => Self::SCORE_4_ROWS_DESTROYED,
+                    self.score += if n_rows_destroyed > 0 {
+                        let max_index = self.settings.scores_for_rows_destroyed.len() - 1;
+                        let index = max_index.min((n_rows_destroyed - 1) as usize);
+                        self.settings.scores_for_rows_destroyed[index]
+                    } else {
+                        0
                     };
                 }
             }
@@ -196,12 +203,12 @@ impl State for Ongoing {
 
         // Draw the wall surrounding the play field.
         let wall_color = Color::Gray;
-        for y in 0..=PlayField::HEIGHT {
+        for y in 0..=self.play_field.height() {
             ui.draw_brick(Position::new(0, y), wall_color);
-            ui.draw_brick(Position::new(PlayField::WIDTH + 1, y), wall_color);
+            ui.draw_brick(Position::new(self.play_field.width() + 1, y), wall_color);
         }
-        for x in 0..=PlayField::WIDTH {
-            ui.draw_brick(Position::new(x, PlayField::HEIGHT), wall_color);
+        for x in 0..=self.play_field.width() {
+            ui.draw_brick(Position::new(x, self.play_field.height()), wall_color);
         }
 
         // Draw the inactive bricks in the play field and the active tetromino.
@@ -219,7 +226,7 @@ impl State for Ongoing {
 
         // Texts are shown on the right panel, so leave space for the play field
         // + 2 units for the wall + 2 units for left margin.
-        let text_x = PlayField::WIDTH + 4;
+        let text_x = self.play_field.width() + 4;
 
         ui.draw_text(Position::new(text_x, 1), &format!("Score: {}", self.score));
         ui.draw_text(
@@ -247,7 +254,7 @@ impl State for Ongoing {
             );
             ui.draw_text(
                 Position::new(text_x, 13),
-                &format!("Fall speed: {}", self.fall_speed),
+                &format!("Fall pace: {}", self.fall_pace()),
             );
         }
     }

@@ -1,5 +1,6 @@
 use rand::random;
 
+use crate::conf::TetrisSettings;
 use crate::{Button, Color, GamePad, GameUI, Position};
 
 use super::{State, StateName};
@@ -12,7 +13,7 @@ pub struct Intro {
 }
 
 impl Intro {
-    pub fn new() -> Self {
+    pub fn new(_settings: &TetrisSettings) -> Self {
         let tetris_positions = vec![
             // T
             (1, 1),
