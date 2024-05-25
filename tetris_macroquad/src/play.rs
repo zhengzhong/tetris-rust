@@ -32,7 +32,9 @@ pub async fn play_game(settings: Settings) {
             sleep(dt_to_sleep);
         } else {
             let overrun_millis = (dt - loop_interval).as_millis();
-            log::warn!("Loop #{} overran {} millis!", n_loops, overrun_millis);
+            if overrun_millis > 0 {
+                log::warn!("Loop #{} overran {} millis!", n_loops, overrun_millis);
+            }
         }
         n_loops += 1;
         t = SystemTime::now();

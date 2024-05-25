@@ -1,4 +1,6 @@
 # Settings to override the defaults.
 tetris:
-  play_field_width: 12
+  play_field_width: 10
   play_field_height: 20
+  scores_for_rows_destroyed: [100, 200, 400, 1000]
+  score_per_level: 1000

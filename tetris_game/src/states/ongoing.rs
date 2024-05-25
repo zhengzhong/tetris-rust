@@ -13,7 +13,7 @@ pub struct Ongoing<'a> {
     settings: &'a TetrisSettings,
 
     loop_count: i32,
-    fall_speed: i32,
+
     next_tetromino: Option<Tetromino>,
     active_tetromino: Option<Tetromino>,
     play_field: PlayField,
@@ -25,18 +25,11 @@ pub struct Ongoing<'a> {
 }
 
 impl<'a> Ongoing<'a> {
-    const MAX_FALL_SPEED: i32 = 20;
-    const SCORE_1_ROW_DESTROYED: u32 = 10;
-    const SCORE_2_ROWS_DESTROYED: u32 = 50;
-    const SCORE_3_ROWS_DESTROYED: u32 = 100;
-    const SCORE_4_ROWS_DESTROYED: u32 = 200;
-
     pub fn new(settings: &'a TetrisSettings) -> Self {
         Self {
             settings,
 
             loop_count: 0,
-            fall_speed: 1,
             next_tetromino: None,
             active_tetromino: None,
             play_field: PlayField::new(settings.play_field_width, settings.play_field_height),
@@ -52,26 +45,26 @@ impl<'a> Ongoing<'a> {
         Position::new(self.play_field.width() / 2 - 2, 0)
     }
 
-    fn fall_per_n_loops(&self) -> i32 {
-        // Make sure `fall_speed` is within 1..Self::MAX_FALL_SPEED
-        let fall_speed = if self.fall_speed < 1 {
-            1 // slowest
-        } else if self.fall_speed > Self::MAX_FALL_SPEED {
-            Self::MAX_FALL_SPEED // fastest
-        } else {
-            self.fall_speed
-        };
-        // The higher the fall speed is, the smaller `fall_per_n_loops` is.
-        1 + Self::MAX_FALL_SPEED - fall_speed
-    }
-
     fn level(&self) -> u8 {
-        let level = self.score / 100;
+        let level = self.score / self.settings.score_per_level;
         if level <= u8::MAX as u32 {
             level as u8
         } else {
             u8::MAX
         }
+    }
+
+    /// The current fall pace, computed from `level`. Fall pace is the number
+    /// of game loops for the tetromino to fall by one unit. The smaller the
+    /// fall pace is, the faster the game speed is.
+    fn fall_pace(&self) -> u8 {
+        let level = self.level();
+        let fall_pace = if self.settings.fall_pace_slowest > level {
+            self.settings.fall_pace_slowest - level
+        } else {
+            0
+        };
+        fall_pace.max(self.settings.fall_pace_fastest)
     }
 
     fn take_next_tetromino(&mut self) -> Tetromino {
@@ -125,7 +118,6 @@ impl<'a> State for Ongoing<'a> {
             return;
         }
         self.loop_count += 1;
-        self.fall_speed = (self.level() + 1) as i32;
         if self.active_tetromino.is_none() {
             let tetromino = self.take_next_tetromino();
             if self.play_field.is_free(tetromino.bricks()) {
@@ -180,8 +172,8 @@ impl<'a> State for Ongoing<'a> {
         if self.is_game_over {
             return;
         }
-        let fall_per_n_loops = self.fall_per_n_loops();
-        if self.loop_count % fall_per_n_loops == 0 {
+        let fall_pace = self.fall_pace();
+        if self.loop_count % (fall_pace as i32) == 0 {
             if let Some(tetromino) = self.active_tetromino.as_mut() {
                 let has_fallen_down = tetromino.fall_down(&self.play_field);
                 if !has_fallen_down {
@@ -190,12 +182,12 @@ impl<'a> State for Ongoing<'a> {
                         .fill_space(tetromino.bricks(), tetromino.color());
                     self.active_tetromino = None;
                     let n_rows_destroyed = self.play_field.destroy_completed_rows();
-                    self.score += match n_rows_destroyed {
-                        0 => 0,
-                        1 => Self::SCORE_1_ROW_DESTROYED,
-                        2 => Self::SCORE_2_ROWS_DESTROYED,
-                        3 => Self::SCORE_3_ROWS_DESTROYED,
-                        _ => Self::SCORE_4_ROWS_DESTROYED,
+                    self.score += if n_rows_destroyed > 0 {
+                        let max_index = self.settings.scores_for_rows_destroyed.len() - 1;
+                        let index = max_index.min((n_rows_destroyed - 1) as usize);
+                        self.settings.scores_for_rows_destroyed[index]
+                    } else {
+                        0
                     };
                 }
             }
@@ -262,7 +254,7 @@ impl<'a> State for Ongoing<'a> {
             );
             ui.draw_text(
                 Position::new(text_x, 13),
-                &format!("Fall speed: {}", self.fall_speed),
+                &format!("Fall pace: {}", self.fall_pace()),
             );
         }
     }
